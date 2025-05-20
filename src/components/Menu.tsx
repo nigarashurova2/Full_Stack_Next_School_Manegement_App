@@ -1,3 +1,8 @@
+import { role } from "@/lib/data"
+import Image from "next/image"
+import Link from "next/link"
+
+
 const menuItems = [
   {
     title: "MENU",
@@ -6,25 +11,25 @@ const menuItems = [
         icon: "/home.png",
         label: "Home",
         href: "/",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["admin", "teacher", "student", "parent"]
       },
       {
         icon: "/teacher.png",
         label: "Teachers",
         href: "/list/teachers",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "teacher"]
       },
       {
         icon: "/student.png",
         label: "Students",
         href: "/list/students",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "teacher"]
       },
       {
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "teacher"]
       },
       {
         icon: "/subject.png",
@@ -36,15 +41,15 @@ const menuItems = [
         icon: "/class.png",
         label: "Classes",
         href: "/list/classes",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "teacher"], 
       },
       {
         icon: "/lesson.png",
         label: "Lessons",
         href: "/list/lessons",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "teacher"], 
       },
-      {
+        {
         icon: "/exam.png",
         label: "Exams",
         href: "/list/exams",
@@ -86,7 +91,7 @@ const menuItems = [
         href: "/list/announcements",
         visible: ["admin", "teacher", "student", "parent"],
       },
-    ],
+    ]
   },
   {
     title: "OTHER",
@@ -103,12 +108,38 @@ const menuItems = [
         href: "/settings",
         visible: ["admin", "teacher", "student", "parent"],
       },
-      {
+       {
         icon: "/logout.png",
         label: "Logout",
         href: "/logout",
         visible: ["admin", "teacher", "student", "parent"],
-      },
-    ],
-  },
-];
+      }
+    ]
+  }
+]
+
+
+
+const Menu = () => {
+  return (
+    <div className="mt-4 text-sm">
+      {menuItems.map(section=>(
+        <div className="flex flex-col gap-2" key={section.title}>
+          <span className="hidden lg:block text-gray-400 font-light my-2">{section.title}</span>
+          {section.items.filter((item)=> item.visible.includes(role)).map((item)=> (
+              <Link className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 px-2 rounded-md hover:bg-skyLight" href={item.href} key={item.label}>
+              <Image 
+              src={item.icon} 
+              alt={item.label}
+              width={20}
+              height={20} />
+              <span className="hidden lg:block">{item.label}</span>
+              </Link>
+            ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default Menu
