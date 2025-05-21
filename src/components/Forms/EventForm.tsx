@@ -2,9 +2,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import InputField from "./InputField";
-import SelectField from "./SelectField";
-import FileInputField from "./FileInputField";
+import InputField from "../InputField";
+import SelectField from "../SelectField";
+import FileInputField from "../FileInputField";
 
 const schema = z.object({
   username: z
@@ -33,7 +33,7 @@ const genderOptions = [
 // Schemadan cixarilan tip
 type FormData = z.infer<typeof schema>;
 
-const StudentForm = ({
+const EventForm = ({
   type,
   data,
 }: {
@@ -54,7 +54,7 @@ const StudentForm = ({
 
   return (
     <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1>{type === "create" ? 'Create a new student' : 'Update a student'}</h1>
+      <h1>{type === "create" ? 'Create a new event' : 'Update a event'}</h1>
       <span className="text-xs text-gray-400 font-medium">
         Authentication Information
       </span>
@@ -160,4 +160,4 @@ const StudentForm = ({
   );
 };
 
-export default StudentForm;
+export default EventForm;
