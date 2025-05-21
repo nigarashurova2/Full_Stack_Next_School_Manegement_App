@@ -1,7 +1,8 @@
+import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { parentsData, role,  } from "@/lib/data";
+import { parentsData, role } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -60,15 +61,11 @@ const ParentListPage = () => {
         <td className="hidden md:table-cell">{item.address}</td>
         <td>
           <div className="flex items-center gap-2">
-            <Link href={`/list/parents/${item.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-sky">
-                <Image src="/edit.png" alt="" width={16} height={16} />
-              </button>
-            </Link>
             {role === "admin" && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-purple">
-                <Image src="/delete.png" alt="" width={16} height={16} />
-              </button>
+              <>
+                <FormModal table="parent" type="update" data={item} />
+                <FormModal table="parent" type="delete" id={item.id} />
+              </>
             )}
           </div>
         </td>
@@ -90,9 +87,7 @@ const ParentListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
-              <Image src="/plus.png" alt="" width={14} height={14} />
-            </button>
+            <FormModal table="parent" type="create" />
           </div>
         </div>
       </div>
