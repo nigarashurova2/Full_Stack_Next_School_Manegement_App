@@ -1,9 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
-import TeacherForm from "./TeacherForm";
-import StudentForm from "./StudentForm";
+
+const TeacherForm = dynamic(()=> import("./TeacherForm"), {
+  loading: ()=> <h1>Loading...</h1>
+})
+
+const StudentForm = dynamic(()=> import("./StudentForm"), {
+  loading: ()=> <h1>Loading...</h1>
+})
 
 type Table =
   | "teacher"
