@@ -4,29 +4,11 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 
 export type SubjectList = Subject & { teachers: Teacher[] };
-
-const columns = [
-  {
-    header: "Subject Name",
-    accessor: "name",
-    className: "text-left",
-  },
-  {
-    header: "Teachers",
-    accessor: "teachers",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: SubjectList) => {
   const role = await getRole();
@@ -46,7 +28,7 @@ const renderRow = async (item: SubjectList) => {
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <>
               <FormModal table="subject" type="update" data={item} />
               <FormModal table="subject" type="delete" id={item.id} />
@@ -67,6 +49,8 @@ const SubjectListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.SubjectWhereInput = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -94,6 +78,28 @@ const SubjectListPage = async ({ searchParams }: Prop) => {
     }),
     prisma.subject.count({ where: query }),
   ]);
+
+  const columns = [
+    {
+      header: "Subject Name",
+      accessor: "name",
+      className: "text-left",
+    },
+    {
+      header: "Teachers",
+      accessor: "teachers",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

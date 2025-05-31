@@ -4,39 +4,11 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Parent, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 
 export type ParentList = Parent & { students: Student[] };
-
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-    className: "text-left",
-  },
-  {
-    header: "Student Names",
-    accessor: "students",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: ParentList) => {
   const role = await getRole();
@@ -59,7 +31,7 @@ const renderRow = async (item: ParentList) => {
       <td className="hidden md:table-cell">{item.address}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <>
               <FormModal table="parent" type="update" data={item} />
               <FormModal table="parent" type="delete" id={item.id} />
@@ -79,6 +51,8 @@ const ParentListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ParentWhereInput = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -106,6 +80,38 @@ const ParentListPage = async ({ searchParams }: Prop) => {
     }),
     prisma.parent.count({ where: query }),
   ]);
+
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+      className: "text-left",
+    },
+    {
+      header: "Student Names",
+      accessor: "students",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

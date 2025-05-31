@@ -4,41 +4,13 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Class, Exam, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 
 export type ExamList = Exam & {
   lesson: { class: Class; subject: Subject; teacher: Teacher };
 };
-
-const columns = [
-  {
-    header: "Subject",
-    accessor: "subject",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: ExamList) => {
   const role = await getRole();
@@ -60,7 +32,7 @@ const renderRow = async (item: ExamList) => {
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" && (
+          {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
             <>
               <FormModal table="exam" type="update" data={item} />
               <FormModal table="exam" type="delete" id={item.id} />
@@ -81,6 +53,9 @@ const ExamListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ExamWhereInput = {};
+  query.lesson = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -106,20 +81,41 @@ const ExamListPage = async ({ searchParams }: Prop) => {
             ];
             break;
           case "teacherId":
-            query.lesson = {
-              teacherId: value,
-            };
+            query.lesson.teacherId = value;
             break;
           case "classId":
-            query.lesson = {
-              classId: parseInt(value),
-            };
+            query.lesson.classId = parseInt(value);
             break;
           default:
             break;
         }
       }
     }
+  }
+
+  // ROLE CONDITION
+  switch (role) {
+    case USER_ROLES.ADMIN:
+      break;
+    case USER_ROLES.TEACHER:
+      query.lesson.teacherId = userId;
+      break;
+    case USER_ROLES.STUDENT:
+      query.lesson.class = {
+        students: {
+          some: { id: userId },
+        },
+      };
+    case USER_ROLES.PARENT:
+      query.lesson.class = {
+        students: {
+          some: {
+            parentId: userId,
+          },
+        },
+      };
+    default:
+      break;
   }
 
   const [data, count] = await prisma.$transaction([
@@ -140,6 +136,38 @@ const ExamListPage = async ({ searchParams }: Prop) => {
     prisma.exam.count({ where: query }),
   ]);
 
+  const columns = [
+    {
+      header: "Subject",
+      accessor: "subject",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -154,7 +182,9 @@ const ExamListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <FormModal table="exam" type="create" />
+            {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
+              <FormModal table="exam" type="create" />
+            )}
           </div>
         </div>
       </div>

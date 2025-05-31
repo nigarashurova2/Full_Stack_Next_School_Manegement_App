@@ -4,53 +4,16 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-    className: "text-left",
-  },
-  {
-    header: "Teacher ID",
-    accessor: "teacherId",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Subjects",
-    accessor: "subjects",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Classes",
-    accessor: "classes",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "text-left hidden lg:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: TeacherList) => {
-    const role = await getRole();
-  
+  const role = await getRole();
+
   return (
     <tr
       key={item.id}
@@ -85,7 +48,7 @@ const renderRow = async (item: TeacherList) => {
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <FormModal table="teacher" type="delete" id={item.id} />
           )}
         </div>
@@ -104,23 +67,25 @@ const TeacherListPage = async ({ searchParams }: Props) => {
   const p = page ? parseInt(page) : 1;
 
   // URL PARAMS CONDITION
-  const query: Prisma.TeacherWhereInput = {}
+  const query: Prisma.TeacherWhereInput = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
-  if(queryParams){
+  if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
-      if(value !== undefined){
+      if (value !== undefined) {
         switch (key) {
           case "classId":
             query.lessons = {
               some: {
-                classId: parseInt(value)
-              }
-            }
+                classId: parseInt(value),
+              },
+            };
             break;
           case "search":
-            query.name = {contains:value, mode:"insensitive"}
+            query.name = { contains: value, mode: "insensitive" };
             break;
-        
+
           default:
             break;
         }
@@ -139,10 +104,51 @@ const TeacherListPage = async ({ searchParams }: Props) => {
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.teacher.count({
-       where: query
+      where: query,
     }),
   ]);
 
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+      className: "text-left",
+    },
+    {
+      header: "Teacher ID",
+      accessor: "teacherId",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Subjects",
+      accessor: "subjects",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Classes",
+      accessor: "classes",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "text-left hidden lg:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}

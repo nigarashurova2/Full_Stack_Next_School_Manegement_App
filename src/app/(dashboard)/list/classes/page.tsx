@@ -4,39 +4,11 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { getRole, USER_ROLES } from "@/lib/utils";
 import { Class, Grade, Prisma, Teacher } from "@prisma/client";
 import Image from "next/image";
 
 export type ClassList = Class & { grade: Grade; supervisor: Teacher };
-
-const columns = [
-  {
-    header: "Class Name",
-    accessor: "name",
-    className: "text-left",
-  },
-  {
-    header: "Capacity",
-    accessor: "capacity",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Grade",
-    accessor: "grade",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Supervisor",
-    accessor: "supervisor",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: ClassList) => {
   const role = await getRole();
@@ -58,7 +30,7 @@ const renderRow = async (item: ClassList) => {
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <>
               <FormModal table="class" type="update" data={item} />
               <FormModal table="class" type="delete" id={item.id} />
@@ -79,6 +51,7 @@ const ClassListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ClassWhereInput = {};
+  const role = await getRole();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -109,6 +82,38 @@ const ClassListPage = async ({ searchParams }: Prop) => {
     }),
     prisma.class.count({ where: query }),
   ]);
+
+  const columns = [
+    {
+      header: "Class Name",
+      accessor: "name",
+      className: "text-left",
+    },
+    {
+      header: "Capacity",
+      accessor: "capacity",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Grade",
+      accessor: "grade",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Supervisor",
+      accessor: "supervisor",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

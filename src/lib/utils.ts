@@ -8,5 +8,14 @@ export const getRole = async () => {
 
 export const currentUserId = async () => {
   const { userId } = await auth();
-  return userId
+  return userId as string
 };
+
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
+  PARENT: 'parent'
+} as const;
+
+export type Role = "admin" | "teacher" | "student" | "parent";

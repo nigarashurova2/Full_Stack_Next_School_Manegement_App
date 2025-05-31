@@ -4,44 +4,11 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Class, Event, Prisma } from "@prisma/client";
 import Image from "next/image";
 
 export type EventList = Event & { class: Class };
-
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Start time",
-    accessor: "startTime",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "End Time",
-    accessor: "endTime",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: EventList) => {
   const role = await getRole();
@@ -56,7 +23,7 @@ const renderRow = async (item: EventList) => {
           <h3 className="font-semibold">{item.title}</h3>
         </div>
       </td>
-      <td className="hidden md:table-cell">{item.class.name}</td>
+      <td className="hidden md:table-cell">{item.class?.name || '-'}</td>
       <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.startTime)}
       </td>
@@ -76,7 +43,7 @@ const renderRow = async (item: EventList) => {
       </td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <>
               <FormModal table="event" type="update" data={item} />
               <FormModal table="event" type="delete" id={item.id} />
@@ -97,6 +64,9 @@ const EventListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.EventWhereInput = {};
+  query.class = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -115,6 +85,20 @@ const EventListPage = async ({ searchParams }: Prop) => {
     }
   }
 
+  // ROLE CONDITION
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: userId } } },
+    student: { students: { some: { id: userId } } },
+    parent: { students: { some: { parentId: userId } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    {
+      class: roleConditions[role as keyof typeof roleConditions] || {},
+    },
+  ];
+
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
@@ -126,6 +110,43 @@ const EventListPage = async ({ searchParams }: Prop) => {
     }),
     prisma.event.count({ where: query }),
   ]);
+
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Start time",
+      accessor: "startTime",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "End Time",
+      accessor: "endTime",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

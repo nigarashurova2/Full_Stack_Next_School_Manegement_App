@@ -4,44 +4,12 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Class, Grade, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
 type StudentList = Student & { class: Class } & { grade: Grade };
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-    className: "text-left",
-  },
-  {
-    header: "Student ID",
-    accessor: "studentId",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Grade",
-    accessor: "grade",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
 
 const renderRow = async (item: StudentList) => {
   const role = await getRole();
@@ -75,7 +43,7 @@ const renderRow = async (item: StudentList) => {
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>
-          {role === "admin" && (
+          {role === USER_ROLES.ADMIN && (
             <FormModal table="student" type="delete" id={item.id} />
           )}
         </div>
@@ -94,6 +62,8 @@ const StudentListPage = async ({ searchParams }: Props) => {
   const p = page ? parseInt(page) : 1;
 
   const query: Prisma.StudentWhereInput = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -129,6 +99,43 @@ const StudentListPage = async ({ searchParams }: Props) => {
     }),
     prisma.student.count({ where: query }),
   ]);
+
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+      className: "text-left",
+    },
+    {
+      header: "Student ID",
+      accessor: "studentId",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Grade",
+      accessor: "grade",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

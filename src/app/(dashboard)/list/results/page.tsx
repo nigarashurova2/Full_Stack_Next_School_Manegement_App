@@ -3,8 +3,8 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { getRole } from "@/lib/utils";
-import {  Prisma } from "@prisma/client";
+import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -20,47 +20,9 @@ export type ResultList = {
   startTime: Date;
 };
 
-const columns = [
-  {
-    header: "Subject Name",
-    accessor: "subject",
-    className: "text-left",
-  },
-  {
-    header: "Student",
-    accessor: "student",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Score",
-    accessor: "score",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "text-left hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-left",
-  },
-];
+const renderRow = async (item: ResultList) => {
+  const role = await getRole();
 
-const renderRow = async(item: ResultList) => {
-    const role = await getRole();
-  
   return (
     <tr
       key={item.id}
@@ -87,7 +49,7 @@ const renderRow = async(item: ResultList) => {
               <Image src="/edit.png" alt="" width={16} height={16} />
             </button>
           </Link>
-          {role === "admin" && (
+          {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-purple">
               <Image src="/delete.png" alt="" width={16} height={16} />
             </button>
@@ -107,6 +69,8 @@ const ResultListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ResultWhereInput = {};
+  const role = await getRole();
+  const userId = await currentUserId();
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -121,7 +85,7 @@ const ResultListPage = async ({ searchParams }: Prop) => {
               },
               {
                 score: parseInt(value),
-              }
+              },
             ];
             break;
           case "studentId":
@@ -132,6 +96,24 @@ const ResultListPage = async ({ searchParams }: Prop) => {
         }
       }
     }
+  }
+
+  // ROLE CONDITION
+  switch (role) {
+    case USER_ROLES.ADMIN:
+      break;
+    case USER_ROLES.TEACHER:
+      query.OR = [
+        { exam: { lesson: { teacherId: userId } } },
+        { assignment: { lesson: { teacherId: userId } } },
+      ];
+      break;
+    case USER_ROLES.STUDENT:
+      query.studentId = userId;
+    case USER_ROLES.PARENT:
+      query.student = { parentId: userId };
+    default:
+      break;
   }
 
   const [dataRes, count] = await prisma.$transaction([
@@ -184,6 +166,48 @@ const ResultListPage = async ({ searchParams }: Prop) => {
       startTime: isExam ? assessment.startTime : assessment.startDate,
     };
   });
+
+  const columns = [
+    {
+      header: "Subject Name",
+      accessor: "subject",
+      className: "text-left",
+    },
+    {
+      header: "Student",
+      accessor: "student",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Score",
+      accessor: "score",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "text-left hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "text-left hidden md:table-cell",
+    },
+    ...(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-left",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
