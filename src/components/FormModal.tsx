@@ -68,7 +68,7 @@ interface FormModalTypes {
   table: Table;
   type: Type;
   data?: any;
-  id?: number;
+  id?: number | string;
 }
 
 type FormsType = {

@@ -125,7 +125,7 @@ const SingleStudentPage = () => {
         </div>
         {/* bottom */}
         <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
-          <h1 className="font-semibold">Student's Schedule</h1>
+          <h1 className="font-semibold">Student&aposs Schedule</h1>
           <BigCalendar />
         </div>
       </div>
@@ -134,20 +134,20 @@ const SingleStudentPage = () => {
         <div className="bg-white p-4 rounded-md">
           <h1 className="text-lg font-semibold">Shortcuts</h1>
           <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-            <Link className="p-3 rounded-md bg-skyLight" href="/">
-              Student's Lessons
+            <Link className="p-3 rounded-md bg-skyLight" href={`/list/lessons?classId=${2}`}>
+              {"Student's Lessons"}
             </Link>
-            <Link className="p-3 rounded-md bg-purpleLight" href="/">
-              Student's Teachers
+            <Link className="p-3 rounded-md bg-purpleLight" href={`/list/teachers?classId=${2}`}>
+              {"Student's Teachers"}
             </Link>
-            <Link className="p-3 rounded-md bg-yellowLight" href="/">
-              Student's Results
+            <Link className="p-3 rounded-md bg-yellowLight" href={`/list/results?studentId=${"student1"}`}>
+              {"Student's Results"}
             </Link>
-            <Link className="p-3 rounded-md bg-pink-50" href="/">
-              Student's Exams
+            <Link className="p-3 rounded-md bg-pink-50" href={`/list/exams?classId=${2}`}>
+              {"Student's Exams"}
             </Link>
-            <Link className="p-3 rounded-md bg-sky" href="/">
-              Student's Assignments
+            <Link className="p-3 rounded-md bg-sky" href={`/list/assignments?studentId=${"student1"}`}>
+              {"Student's Assignments"}
             </Link>
           </div>
         </div>

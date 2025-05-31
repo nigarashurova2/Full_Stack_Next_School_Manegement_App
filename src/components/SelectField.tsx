@@ -31,7 +31,7 @@ const SelectField = ({
         {...selectProps}
       >
         {options.map(({label, val})=> (
-            <option value={val}>{label}</option>
+            <option key={label} value={val}>{label}</option>
         ))}
       </select>
       {error?.message && (
