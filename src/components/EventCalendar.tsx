@@ -1,61 +1,34 @@
-"use client"
-
-import Image from "next/image";
-import { useState } from "react";
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Calendar from "react-calendar";
-import 'react-calendar/dist/Calendar.css';
-
-
-
-//TEMPORARY
-const events = [
-    {
-        id:1,
-        title: "Lorem ipsum dolor",
-        time: "12:00 PM - 2:00 PM",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem, quibusdam?"
-    },
-    {
-        id:2,
-        title: "Lorem ipsum dolor",
-        time: "12:00 PM - 2:00 PM",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem, quibusdam?"
-    },
-    {
-        id:3,
-        title: "Lorem ipsum dolor",
-        time: "12:00 PM - 2:00 PM",
-        description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem, quibusdam?"
-    }
-]
+import "react-calendar/dist/Calendar.css";
 
 type ValuePiece = Date | null;
 
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
-const EventCalendar = () => {
-      const [value, onChange] = useState<Value>(new Date());
-
-  return (
-    <div className="bg-white p-4 rounded-md">
-        <Calendar onChange={onChange} value={value} />
-        <div className="flex items-center justify-between">
-             <h1 className="font-semibold text-xl my-4">Events</h1>
-             <Image src="/moreDark.png" alt="" width={20} height={20} />
-        </div>
-        <div className="flex flex-col gap-4">
-            {events.map(event=> (
-                <div className="p-5 rounded-md border-2 border-gray-100 border-t-4 odd:border-t-sky even:border-t-purple" key={event.id}>
-                    <div className="flex items-center justify-between">
-                        <h1 className="font-semibold text-gray-600 text-md">{event.title}</h1>
-                        <span className="text-gray-300 text-xs">{event.time}</span>
-                    </div>
-                    <p className="text-xs mt-2 text-gray-500">{event.description}</p>
-                </div>
-            ))}
-        </div>
-    </div>
-  )
+function formatDateToYMD(date: Date): string {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-export default EventCalendar
+
+const EventCalendar = () => {
+  const [value, onChange] = useState<Value>(new Date());
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (value instanceof Date) {
+      const date = formatDateToYMD(value);
+      router.push(`?date=${date}`);
+    }
+  }, [value, router]);
+
+  return <Calendar onChange={onChange} value={value} />;
+};
+
+export default EventCalendar;
