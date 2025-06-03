@@ -5,9 +5,10 @@ interface SelectFieldProps {
   register: any;
   name: string;
   defaultValue?: string;
-  error?: FieldError;
+  error?: FieldError | any;
   selectProps?: React.InputHTMLAttributes<HTMLInputElement>;
-  options: {label:string, val:string}[]
+  options: {label:string, val:string}[];
+  multiple: boolean
 }
 
 const SelectField = ({
@@ -17,21 +18,25 @@ const SelectField = ({
   defaultValue,
   error,
   selectProps,
-  options
+  options,
+  multiple
 }: SelectFieldProps) => {
+  console.log(options, "options");
+  
   return (
-    <div className="flex flex-col gap-2 w-full md:w-1/4">
+    <div className="flex flex-col gap-2 w-full md:w-1/4" >
       <label htmlFor={name} className="text-xs text-gray-500">
         {label}
       </label>
       <select
+        multiple={multiple}
         {...register(name)}
         className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
         defaultValue={defaultValue}
         {...selectProps}
       >
-        {options.map(({label, val})=> (
-            <option key={label} value={val}>{label}</option>
+        {options.map((option, index)=> (
+            <option key={option.val} value={option.val}>{option.label}</option>
         ))}
       </select>
       {error?.message && (

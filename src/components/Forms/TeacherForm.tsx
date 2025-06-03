@@ -1,60 +1,88 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
 import SelectField from "../SelectField";
 import FileInputField from "../FileInputField";
-
-const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters long" })
-    .max(20, { message: "Username must be at most 20 characters long" }),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long" }),
-  firstname: z.string().min(1, { message: "Firsname is required" }),
-  lastname: z.string().min(1, { message: "Lastname is required" }),
-  phone: z.string().min(1, { message: "Phone is required" }),
-  address: z.string().min(1, { message: "Address is required" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required" }),
-  birthday: z.date({ message: "Birthday is required" }),
-  gender: z.enum(["male", "female"], { message: "Gender is required" }),
-  img: z.instanceof(File, { message: "Image is required" }),
-});
-
-const genderOptions = [
-  { label: "Male", val: "male" },
-  { label: "Female", val: "female" },
-];
-
-// Schemadan cixarilan tip
-type FormData = z.infer<typeof schema>;
+import { Dispatch, SetStateAction, useEffect } from "react";
+import {
+  genderOptions,
+  teacherSchema,
+  TeacherSchema,
+} from "@/lib/formValidationSchemas";
+import { createTeacher, updateTeacher } from "@/lib/actions";
+import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import { Bounce, toast } from "react-toastify";
+import { string } from "zod/v4";
 
 const TeacherForm = ({
   type,
   data,
+  setOpen,
+  relatedData,
 }: {
+  setOpen: Dispatch<SetStateAction<boolean>>;
   type: "create" | "update";
   data?: any;
+  relatedData?: any;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<TeacherSchema>({
+    resolver: zodResolver(teacherSchema),
   });
 
-  const onSubmit = handleSubmit((data: FormData) => {
+  const router = useRouter();
+  const {subjects} = relatedData;
+  const [state, formAction] = useFormState(
+    type === "create" ? createTeacher : updateTeacher,
+    {
+      success: false,
+      error: false,
+      message: "",
+    }
+  );
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success(
+        `Teacher has been ${type === "create" ? "created" : "updated"}`,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        }
+      );
+      setOpen(false);
+      router.refresh();
+    }
+  }, [router, state]);
+
+  const onSubmit = handleSubmit((data: TeacherSchema) => {
     console.log(data);
+    formAction(data);
   });
+ 
+   const subjectOptions = subjects.map(
+    (item: { id: number; name: string; }) => ({
+      label: item.name,
+      val: item.id,
+    })
+  );
+
 
   return (
     <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1>{type === "create" ? 'Create a new teacher' : 'Update a teacher'}</h1>
+      <h1>{type === "create" ? "Create a new teacher" : "Update a teacher"}</h1>
       <span className="text-xs text-gray-400 font-medium">
         Authentication Information
       </span>
@@ -90,20 +118,20 @@ const TeacherForm = ({
       </span>
       <div className="flex flex-wrap justify-between items-center gap-4">
         <InputField
-          label="Firstname"
+          label="Name"
           type="text"
           register={register}
-          name="firstname"
-          defaultValue={data?.firstname}
-          error={errors.firstname}
+          name="name"
+          defaultValue={data?.name}
+          error={errors.name}
         />
         <InputField
-          label="Lastname"
+          label="Surname"
           type="text"
           register={register}
-          name="lastname"
-          defaultValue={data?.lastname}
-          error={errors.lastname}
+          name="surname"
+          defaultValue={data?.surname}
+          error={errors.surname}
         />
         <InputField
           label="Phone"
@@ -140,10 +168,20 @@ const TeacherForm = ({
         <SelectField
           label="Gender"
           register={register}
-          name="gender"
-          defaultValue={data?.gender}
-          error={errors.gender}
+          name="sex"
+          defaultValue={data?.sex}
+          error={errors.sex}
           options={genderOptions}
+          multiple={false}
+        />
+        <SelectField
+          label="Subjects"
+          register={register}
+          name="subjects"
+          defaultValue={data?.subjects}
+          error={errors?.subjects}
+          options={subjectOptions}
+          multiple={true}
         />
         <FileInputField
           label="Image"
@@ -153,6 +191,7 @@ const TeacherForm = ({
           error={errors.img}
         />
       </div>
+      {state.error && <span className="text-red-500">{state.message}</span>}
       <button className="bg-blue-400 text-white p-2 rounded-md " type="submit">
         {type === "create" ? "Create" : "Update"}
       </button>
