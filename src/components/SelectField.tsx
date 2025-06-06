@@ -21,7 +21,6 @@ const SelectField = ({
   options,
   multiple
 }: SelectFieldProps) => {
-  console.log(options, "options");
   
   return (
     <div className="flex flex-col gap-2 w-full md:w-1/4" >

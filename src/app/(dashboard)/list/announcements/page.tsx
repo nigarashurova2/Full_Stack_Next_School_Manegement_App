@@ -50,10 +50,9 @@ const AnnouncementListPage = async ({ searchParams }: Prop) => {
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.AnnouncementWhereInput = {};
-  query.class = {}
+  query.class = {};
   const role = await getRole();
   const userId = await currentUserId();
-  
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -80,12 +79,14 @@ const AnnouncementListPage = async ({ searchParams }: Prop) => {
     parent: { students: { some: { parentId: userId } } },
   };
 
-  query.OR = [
-    { classId: null },
-    {
-      class: roleConditions[role as keyof typeof roleConditions] || {},
-    },
-  ];
+  if (role !== USER_ROLES.ADMIN) {
+    query.OR = [
+      { classId: null },
+      {
+        class: roleConditions[role as keyof typeof roleConditions] || {},
+      },
+    ];
+  }
 
   const [data, count] = await prisma.$transaction([
     prisma.announcement.findMany({

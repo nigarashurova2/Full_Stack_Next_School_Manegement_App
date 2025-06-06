@@ -14,7 +14,6 @@ import { createTeacher, updateTeacher } from "@/lib/actions";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bounce, toast } from "react-toastify";
-import { string } from "zod/v4";
 
 const TeacherForm = ({
   type,
@@ -68,7 +67,7 @@ const TeacherForm = ({
   }, [router, state]);
 
   const onSubmit = handleSubmit((data: TeacherSchema) => {
-    console.log(data);
+    console.log(data, "DATA");
     formAction(data);
   });
  
@@ -162,7 +161,7 @@ const TeacherForm = ({
           type="date"
           register={register}
           name="birthday"
-          defaultValue={data?.birthday}
+          defaultValue={data?.birthday.toISOString().split("T")[0]}
           error={errors.birthday}
         />
         <SelectField
@@ -183,13 +182,13 @@ const TeacherForm = ({
           options={subjectOptions}
           multiple={true}
         />
-        <FileInputField
+        {/* <FileInputField
           label="Image"
           register={register}
           name="img"
-          defaultValue={data?.img}
+          defaultValue={""}
           error={errors.img}
-        />
+        /> */}
       </div>
       {state.error && <span className="text-red-500">{state.message}</span>}
       <button className="bg-blue-400 text-white p-2 rounded-md " type="submit">

@@ -2,7 +2,7 @@ import { FieldError } from "react-hook-form";
 
 interface InputFieldProps {
   label: string;
-  type: string;
+  type?: string;
   register: any;
   name: string;
   defaultValue?: string;

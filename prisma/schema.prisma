@@ -43,7 +43,7 @@ model Teacher {
   email     String?   @unique
   phone     String?   @unique
   address   String
-  img       String?
+  // img       String?
   bloodType String
   sex       UserSex
   createdAt DateTime  @default(now())

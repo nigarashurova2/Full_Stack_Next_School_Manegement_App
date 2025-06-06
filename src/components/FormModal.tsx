@@ -1,6 +1,11 @@
 "use client";
 
-import { deleteClass, deleteSubject } from "@/lib/actions";
+import {
+  deleteClass,
+  deleteStudent,
+  deleteSubject,
+  deleteTeacher,
+} from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -64,8 +69,8 @@ type FormsType = {
 
 const deleteActionMap: Record<Table, typeof deleteClass> = {
   subject: deleteSubject,
-  teacher: deleteSubject,
-  student: deleteSubject,
+  teacher: deleteTeacher,
+  student: deleteStudent,
   parent: deleteSubject,
   class: deleteClass,
   lesson: deleteSubject,
@@ -78,8 +83,22 @@ const deleteActionMap: Record<Table, typeof deleteClass> = {
 };
 
 const forms: FormsType = {
-  teacher: (setOpen, type, data, relatedData) => <TeacherForm setOpen={setOpen} type={type} data={data} relatedData={relatedData} />,
-  // student: (setOpen, type, data) => <StudentForm setOpen={setOpen} type={type} data={data} />,
+  teacher: (setOpen, type, data, relatedData) => (
+    <TeacherForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  student: (setOpen, type, data, relatedData) => (
+    <StudentForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
   // parent: (setOpen, type, data) => <ParentForm setOpen={setOpen} type={type} data={data} />,
   class: (setOpen, type, data, relatedData) => (
     <ClassForm
@@ -151,7 +170,7 @@ const FormModal = ({
   const Form = () => {
     return type === "delete" && id ? (
       <form action={formAction} className="p-4 flex flex-col gap-4">
-        <input type="text | number" name="id" value={id} hidden />
+        <input type="text | number" name="id" value={id} hidden readOnly />
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>

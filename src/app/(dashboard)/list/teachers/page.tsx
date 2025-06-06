@@ -21,7 +21,7 @@ const renderRow = async (item: TeacherList) => {
     >
       <td className="flex items-center gap-4 p-4">
         <Image
-          src={item.img || "/avatar.png"}
+          src={"/avatar.png"}
           alt="teacher"
           width={40}
           height={40}

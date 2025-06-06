@@ -4,9 +4,7 @@ const EventList = async ({dateParam} : {dateParam: string | undefined}) => {
   //TEMPORARY
 
   const date = dateParam ? new Date(dateParam) : new Date()
-  console.log(dateParam, "dateparam");
   
-  console.log(date, "date");
   
 
   const data = await prisma.event.findMany({
@@ -19,7 +17,6 @@ const EventList = async ({dateParam} : {dateParam: string | undefined}) => {
   })
 
 
-  console.log(data, "data");
   
   return (
     <div className="flex flex-col gap-4">
