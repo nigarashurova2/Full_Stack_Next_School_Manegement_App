@@ -3,6 +3,7 @@
 import {
   deleteAnnouncement,
   deleteAssignment,
+  deleteAttendance,
   deleteClass,
   deleteEvent,
   deleteExam,
@@ -87,7 +88,7 @@ const deleteActionMap: Record<Table, typeof deleteClass> = {
   lesson: deleteLesson,
   exam: deleteExam,
   assignment: deleteAssignment,
-  attendance: deleteSubject,
+  attendance: deleteAttendance,
   event: deleteEvent,
   announcement: deleteAnnouncement,
   result: deleteResult,
@@ -182,7 +183,14 @@ const forms: FormsType = {
       relatedData={relatedData}
     />
   ),
-  // attendance: (setOpen, type, data) => <AttendanceForm setOpen={setOpen} type={type} data={data} />,
+  attendance: (setOpen, type, data, relatedData) => (
+    <AttendanceForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
 };
 
 const FormModal = ({

@@ -19,24 +19,31 @@ const InputField = ({
   defaultValue,
   error,
   inputProps,
-  hidden
+  hidden,
 }: InputFieldProps) => {
   return (
-    <div className={`flex flex-col gap-2 w-full md:w-1/4 ${hidden && "hidden"}`}>
+    <div
+      className={`flex ${
+        type === "checkbox" ? "flex-row items-center" : "flex-col"
+      } gap-2 w-full md:w-1/4 ${hidden && "hidden"}`}
+    >
       <label htmlFor={name} className="text-xs text-gray-500">
         {label}
       </label>
       <input
         type={type}
-        {...register(name)}
-        className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+        // checked={defaultValue}
         defaultValue={defaultValue}
+        {...register(name)}
+        className={`${
+          type !== "checkbox"
+            ? "ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            : ""
+        }`}
         {...inputProps}
       />
       {error?.message && (
-        <p className="text-xs text-red-400">
-          {error.message.toString()}
-        </p>
+        <p className="text-xs text-red-400">{error.message.toString()}</p>
       )}
     </div>
   );
