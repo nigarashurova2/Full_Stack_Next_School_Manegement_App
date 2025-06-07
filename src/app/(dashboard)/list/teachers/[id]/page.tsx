@@ -46,13 +46,13 @@ const SingleTeacherPage = async ({
           {/* user info card */}
           <div className="bg-sky py-6 px-4 rounded-md flex-1 flex gap-4">
             <div className="w-1/3">
-              <Image
+              {/* <Image
                 src={teacher.img || "/avatar.png"}
                 alt="profileImage"
                 width={100}
                 height={100}
                 className="w-30 h-30 rounded-full object-cover"
-              />
+              /> */}
             </div>
             <div className="w-2/3 flex flex-col justify-between gap-2">
               <div className="flex items-center gap-4">

@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -22,17 +22,19 @@ const renderRow = async (item: LessonList) => {
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.subject.name}</h3>
+          <h3 className="font-semibold">{item.name}</h3>
         </div>
       </td>
+      <td className="hidden md:table-cell">{item.subject.name}</td>
+
       <td className="hidden md:table-cell">{item.class.name}</td>
       <td className="hidden md:table-cell">{item.teacher.username}</td>
       <td>
         <div className="flex items-center gap-2">
           {role === USER_ROLES.ADMIN && (
             <>
-              <FormModal table="lesson" type="update" data={item} />
-              <FormModal table="lesson" type="delete" id={item.id} />
+              <FormContainer table="lesson" type="update" data={item} />
+              <FormContainer table="lesson" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -59,6 +61,7 @@ const LessonListPage = async ({ searchParams }: Prop) => {
         switch (key) {
           case "search":
             query.OR = [
+              { name: { contains: value, mode: "insensitive" } },
               { subject: { name: { contains: value, mode: "insensitive" } } },
               {
                 teacher: { username: { contains: value, mode: "insensitive" } },
@@ -81,6 +84,9 @@ const LessonListPage = async ({ searchParams }: Prop) => {
   const [data, count] = await prisma.$transaction([
     prisma.lesson.findMany({
       where: query,
+      orderBy: {
+        id: "desc",
+      },
       include: {
         class: { select: { name: true } },
         subject: { select: { name: true } },
@@ -94,9 +100,14 @@ const LessonListPage = async ({ searchParams }: Prop) => {
 
   const columns = [
     {
-      header: "Subject Name",
+      header: "Lesson Name",
       accessor: "name",
       className: "text-left",
+    },
+    {
+      header: "Subject Name",
+      accessor: "name",
+      className: "text-left hidden md:table-cell",
     },
     {
       header: "Class",
@@ -133,7 +144,7 @@ const LessonListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <FormModal table="lesson" type="create" />
+            <FormContainer table="lesson" type="create" />
           </div>
         </div>
       </div>

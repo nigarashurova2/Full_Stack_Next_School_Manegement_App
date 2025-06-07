@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -23,7 +23,7 @@ const renderRow = async (item: EventList) => {
           <h3 className="font-semibold">{item.title}</h3>
         </div>
       </td>
-      <td className="hidden md:table-cell">{item.class?.name || '-'}</td>
+      <td className="hidden md:table-cell">{item.class?.name || "-"}</td>
       <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.startTime)}
       </td>
@@ -45,8 +45,8 @@ const renderRow = async (item: EventList) => {
         <div className="flex items-center gap-2">
           {role === USER_ROLES.ADMIN && (
             <>
-              <FormModal table="event" type="update" data={item} />
-              <FormModal table="event" type="delete" id={item.id} />
+              <FormContainer table="event" type="update" data={item} />
+              <FormContainer table="event" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -73,7 +73,10 @@ const EventListPage = async ({ searchParams }: Prop) => {
       if (value !== undefined) {
         switch (key) {
           case "search":
-            query.title = { contains: value, mode: "insensitive" };
+            query.OR = [
+              {title: { contains: value, mode: "insensitive" }},
+              {class: {name: { contains: value, mode: "insensitive" }}}
+            ];
             break;
           case "classId":
             query.classId = parseInt(value);
@@ -92,16 +95,21 @@ const EventListPage = async ({ searchParams }: Prop) => {
     parent: { students: { some: { parentId: userId } } },
   };
 
-  query.OR = [
-    { classId: null },
-    {
-      class: roleConditions[role as keyof typeof roleConditions] || {},
-    },
-  ];
+  if (role !== USER_ROLES.ADMIN) {
+    query.OR = [
+      { classId: null },
+      {
+        class: roleConditions[role as keyof typeof roleConditions] || {},
+      },
+    ];
+  }
 
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
+      orderBy:{
+        id: "desc"
+      },
       include: {
         class: { select: { name: true } },
       },
@@ -162,7 +170,7 @@ const EventListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <FormModal table="event" type="create" />
+            <FormContainer table="event" type="create" />
           </div>
         </div>
       </div>

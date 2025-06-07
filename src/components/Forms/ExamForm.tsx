@@ -1,159 +1,148 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
+import {
+  examSchema,
+  ExamSchema,
+} from "@/lib/formValidationSchemas";
+import {
+  createExam,
+  updateExam,
+} from "@/lib/actions";
+import { useFormState } from "react-dom";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { Bounce, toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import SelectField from "../SelectField";
-import FileInputField from "../FileInputField";
 
-const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters long" })
-    .max(20, { message: "Username must be at most 20 characters long" }),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long" }),
-  firstname: z.string().min(1, { message: "Firsname is required" }),
-  lastname: z.string().min(1, { message: "Lastname is required" }),
-  phone: z.string().min(1, { message: "Phone is required" }),
-  address: z.string().min(1, { message: "Address is required" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required" }),
-  birthday: z.date({ message: "Birthday is required" }),
-  gender: z.enum(["male", "female"], { message: "Gender is required" }),
-  img: z.instanceof(File, { message: "Image is required" }),
-});
-
-const genderOptions = [
-  { label: "Male", val: "male" },
-  { label: "Female", val: "female" },
-];
-
-// Schemadan cixarilan tip
-type FormData = z.infer<typeof schema>;
+export const formatDateTimeLocal = (date: Date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+};
 
 const ExamForm = ({
   type,
   data,
+  setOpen,
+  relatedData,
 }: {
   type: "create" | "update";
   data?: any;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  relatedData?: any;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<ExamSchema>({
+    resolver: zodResolver(examSchema),
   });
 
-  const onSubmit = handleSubmit((data: FormData) => {
+  // AFTER REACT 19 IT'LL BE USEACTIONSTATE
+
+  const [state, formAction] = useFormState(
+    type === "create" ? createExam : updateExam,
+    {
+      success: false,
+      error: false,
+      message: "",
+    }
+  );
+
+  const onSubmit = handleSubmit((data) => {
     console.log(data);
+    formAction(data);
   });
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success(
+        `Exam has been ${type === "create" ? "created" : "updated"}`,
+        {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        }
+      );
+      setOpen(false);
+      router.refresh();
+    }
+  }, [state, router, type, setOpen]);
+
+  const { lessons } = relatedData;
+  const lessonOptions = lessons.map((item: { id: number; name: string }) => ({
+    label: item.name,
+    val: item.id,
+  }));
 
   return (
-    <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1>{type === "create" ? 'Create a new exam' : 'Update a exam'}</h1>
-      <span className="text-xs text-gray-400 font-medium">
-        Authentication Information
-      </span>
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <InputField
-          label="Username"
-          type="text"
-          register={register}
-          name="username"
-          defaultValue={data?.username}
-          error={errors.username}
-        />
-        <InputField
-          label="Email"
-          type="email"
-          register={register}
-          name="email"
-          defaultValue={data?.email}
-          error={errors.email}
-        />
-        <InputField
-          label="Password"
-          type="password"
-          register={register}
-          name="password"
-          defaultValue={data?.password}
-          error={errors.password}
-        />
-      </div>
+    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+      <h1 className="text-xl font-semibold">
+        {type === "create" ? "Create a new exam" : "Update the exam"}
+      </h1>
 
-      <span className="text-xs text-gray-400 font-medium">
-        Personal Information
-      </span>
-      <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="flex justify-between flex-wrap gap-4">
         <InputField
-          label="Firstname"
-          type="text"
+          label="Exam title"
+          name="title"
+          defaultValue={data?.title}
           register={register}
-          name="firstname"
-          defaultValue={data?.firstname}
-          error={errors.firstname}
+          error={errors?.title}
         />
         <InputField
-          label="Lastname"
-          type="text"
+          label="Start Date"
+          name="startTime"
+          defaultValue={
+            data?.startTime ? formatDateTimeLocal(data.startTime) : ""
+          }
           register={register}
-          name="lastname"
-          defaultValue={data?.lastname}
-          error={errors.lastname}
+          error={errors?.startTime}
+          type="datetime-local"
         />
         <InputField
-          label="Phone"
-          type="text"
+          label="End Date"
+          name="endTime"
+          defaultValue={data?.endTime ? formatDateTimeLocal(data.endTime) : ""}
           register={register}
-          name="phone"
-          defaultValue={data?.phone}
-          error={errors.phone}
+          error={errors?.endTime}
+          type="datetime-local"
         />
-        <InputField
-          label="Address"
-          type="text"
-          register={register}
-          name="address"
-          defaultValue={data?.address}
-          error={errors.address}
-        />
-        <InputField
-          label="Blood Type"
-          type="text"
-          register={register}
-          name="bloodType"
-          defaultValue={data?.bloodType}
-          error={errors.bloodType}
-        />
-        <InputField
-          label="Birthday"
-          type="date"
-          register={register}
-          name="birthday"
-          defaultValue={data?.birthday}
-          error={errors.birthday}
-        />
+        {data && (
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors?.id}
+            hidden
+          />
+        )}
         <SelectField
-          label="Gender"
+          label="Lesson"
           register={register}
-          name="gender"
-          defaultValue={data?.gender}
-          error={errors.gender}
-          options={genderOptions}
-        />
-        <FileInputField
-          label="Image"
-          register={register}
-          name="img"
-          defaultValue={data?.img}
-          error={errors.img}
+          name="lessonId"
+          defaultValue={data?.lessonId}
+          options={lessonOptions}
+          multiple={false}
+          error={errors?.lessonId}
         />
       </div>
-      <button className="bg-blue-400 text-white p-2 rounded-md " type="submit">
+      {state.error && (
+        <span className="text-red-500">{state.message}</span>
+      )}
+      <button className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

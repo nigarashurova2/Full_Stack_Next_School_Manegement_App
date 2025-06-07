@@ -1,60 +1,87 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import {
+  ParentSchema,
+  parentSchema,
+  StudentSchema,
+} from "@/lib/formValidationSchemas";
+import { useFormState } from "react-dom";
+import { createParent, updateParent } from "@/lib/actions";
+import { Bounce, toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import SelectField from "../SelectField";
-import FileInputField from "../FileInputField";
-
-const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters long" })
-    .max(20, { message: "Username must be at most 20 characters long" }),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long" }),
-  firstname: z.string().min(1, { message: "Firsname is required" }),
-  lastname: z.string().min(1, { message: "Lastname is required" }),
-  phone: z.string().min(1, { message: "Phone is required" }),
-  address: z.string().min(1, { message: "Address is required" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required" }),
-  birthday: z.date({ message: "Birthday is required" }),
-  gender: z.enum(["male", "female"], { message: "Gender is required" }),
-  img: z.instanceof(File, { message: "Image is required" }),
-});
-
-const genderOptions = [
-  { label: "Male", val: "male" },
-  { label: "Female", val: "female" },
-];
-
-// Schemadan cixarilan tip
-type FormData = z.infer<typeof schema>;
 
 const ParentForm = ({
+  setOpen,
   type,
   data,
+  relatedData,
 }: {
+  setOpen: Dispatch<SetStateAction<boolean>>;
   type: "create" | "update";
   data?: any;
+  relatedData?: any;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<ParentSchema>({
+    resolver: zodResolver(parentSchema),
   });
 
-  const onSubmit = handleSubmit((data: FormData) => {
+  const [state, formAction] = useFormState(
+    type === "create" ? createParent : updateParent,
+    {
+      success: false,
+      error: false,
+      message: "",
+    }
+  );
+
+  const onSubmit = handleSubmit((data: ParentSchema) => {
     console.log(data);
+    formAction(data);
   });
+  const router = useRouter();
+
+  useEffect(() => {
+
+    if (state.success) {
+      toast.success(
+        `Parent has been ${type === "create" ? "created" : "updated"}`,
+        {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        }
+      );
+      setOpen(false);
+      router.refresh();
+    }
+  }, [router, state]);
+
+  const { students } = relatedData;
+
+  const studentOptions = students.map(
+    (item: { id: number; name: string; surname: string }) => ({
+      label: item.name + " " + item.surname,
+      val: item.id,
+    })
+  );
 
   return (
     <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1>{type === "create" ? 'Create a new parent' : 'Update a parent'}</h1>
+      <h1>{type === "create" ? "Create a new parent" : "Update a parent"}</h1>
       <span className="text-xs text-gray-400 font-medium">
         Authentication Information
       </span>
@@ -93,17 +120,17 @@ const ParentForm = ({
           label="Firstname"
           type="text"
           register={register}
-          name="firstname"
-          defaultValue={data?.firstname}
-          error={errors.firstname}
+          name="name"
+          defaultValue={data?.name}
+          error={errors.name}
         />
         <InputField
           label="Lastname"
           type="text"
           register={register}
-          name="lastname"
-          defaultValue={data?.lastname}
-          error={errors.lastname}
+          name="surname"
+          defaultValue={data?.surname}
+          error={errors.surname}
         />
         <InputField
           label="Phone"
@@ -121,38 +148,30 @@ const ParentForm = ({
           defaultValue={data?.address}
           error={errors.address}
         />
-        <InputField
-          label="Blood Type"
-          type="text"
-          register={register}
-          name="bloodType"
-          defaultValue={data?.bloodType}
-          error={errors.bloodType}
-        />
-        <InputField
-          label="Birthday"
-          type="date"
-          register={register}
-          name="birthday"
-          defaultValue={data?.birthday}
-          error={errors.birthday}
-        />
+
         <SelectField
-          label="Gender"
+          label="Students"
           register={register}
-          name="gender"
-          defaultValue={data?.gender}
-          error={errors.gender}
-          options={genderOptions}
+          name="students"
+          defaultValue={data?.students.map(
+            (student: StudentSchema) => student.id
+          )}
+          options={studentOptions}
+          multiple={true}
         />
-        <FileInputField
-          label="Image"
-          register={register}
-          name="img"
-          defaultValue={data?.img}
-          error={errors.img}
-        />
+        {data && (
+          <InputField
+            label="id"
+            type="string"
+            register={register}
+            name="id"
+            defaultValue={data?.id}
+            error={errors.id}
+            hidden={true}
+          />
+        )}
       </div>
+      {state.error && <span className="text-red-500">{state.message}</span>}
       <button className="bg-blue-400 text-white p-2 rounded-md " type="submit">
         {type === "create" ? "Create" : "Update"}
       </button>

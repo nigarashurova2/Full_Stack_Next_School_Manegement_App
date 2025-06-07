@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import InputField from "../InputField";
 import SelectField from "../SelectField";
 import FileInputField from "../FileInputField";
-import { subjectSchema, SubjectSchema } from "@/lib/formValidationSchemas";
+import { subjectSchema, SubjectSchema, TeacherSchema } from "@/lib/formValidationSchemas";
 import { createSubject, updateSubject } from "@/lib/actions";
 import { useFormState } from "react-dom";
 import { Dispatch, SetStateAction, useEffect } from "react";
@@ -40,7 +40,6 @@ const SubjectForm = ({
   );
 
   const onSubmit = handleSubmit((data: SubjectSchema) => {
-    console.log(data);
     formAction(data);
   });
   const router = useRouter();
@@ -52,7 +51,7 @@ const SubjectForm = ({
         `Subject has been ${type === "create" ? "created" : "updated"}`,
         {
           position: "top-right",
-          autoClose: 5000,
+          autoClose: 2000,
           hideProgressBar: false,
           closeOnClick: false,
           pauseOnHover: true,
@@ -91,7 +90,7 @@ const SubjectForm = ({
           label="Teachers"
           register={register}
           name="teachers"
-          defaultValue={teacherOptions}
+          defaultValue={data?.teachers.map((teacher: TeacherSchema)=> teacher.id)}
           options={teacherOptions}
           multiple={true}
         />

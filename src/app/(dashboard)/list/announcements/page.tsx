@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -23,6 +23,8 @@ const renderRow = async (item: AnnouncementList) => {
           <h3 className="font-semibold">{item.title}</h3>
         </div>
       </td>
+      <td className="hidden md:table-cell">{item.description}</td>
+
       <td className="hidden md:table-cell">{item.class?.name || "-"}</td>
       <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.date)}
@@ -31,8 +33,8 @@ const renderRow = async (item: AnnouncementList) => {
         <div className="flex items-center gap-2">
           {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
             <>
-              <FormModal table="announcement" type="update" data={item} />
-              <FormModal table="announcement" type="delete" id={item.id} />
+              <FormContainer table="announcement" type="update" data={item} />
+              <FormContainer table="announcement" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -91,6 +93,9 @@ const AnnouncementListPage = async ({ searchParams }: Prop) => {
   const [data, count] = await prisma.$transaction([
     prisma.announcement.findMany({
       where: query,
+      orderBy: {
+        id: "desc",
+      },
       include: {
         class: { select: { name: true } },
       },
@@ -105,6 +110,11 @@ const AnnouncementListPage = async ({ searchParams }: Prop) => {
       header: "Title",
       accessor: "title",
       className: "text-left",
+    },
+    {
+      header: "Description",
+      accessor: "description",
+      className: "text-left hidden md:table-cell",
     },
     {
       header: "Class",
@@ -142,7 +152,7 @@ const AnnouncementListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <FormModal table="announcement" type="create" />
+            <FormContainer table="announcement" type="create" />
           </div>
         </div>
       </div>

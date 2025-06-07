@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -9,7 +9,7 @@ import { Class, Exam, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 
 export type ExamList = Exam & {
-  lesson: { class: Class; subject: Subject; teacher: Teacher };
+  lesson: { class: Class; subject: Subject; teacher: Teacher; name: string };
 };
 
 const renderRow = async (item: ExamList) => {
@@ -22,9 +22,11 @@ const renderRow = async (item: ExamList) => {
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.lesson.subject.name}</h3>
+          <h3 className="font-semibold">{item.lesson.name}</h3>
         </div>
       </td>
+      <td className="hidden md:table-cell">{item.lesson.subject.name}</td>
+      <td className="hidden md:table-cell">{item.title}</td>
       <td className="hidden md:table-cell">{item.lesson.class.name}</td>
       <td className="hidden md:table-cell">{item.lesson.teacher.name}</td>
       <td className="hidden md:table-cell">
@@ -34,8 +36,8 @@ const renderRow = async (item: ExamList) => {
         <div className="flex items-center gap-2">
           {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
             <>
-              <FormModal table="exam" type="update" data={item} />
-              <FormModal table="exam" type="delete" id={item.id} />
+              <FormContainer table="exam" type="update" data={item} />
+              <FormContainer table="exam" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -121,9 +123,13 @@ const ExamListPage = async ({ searchParams }: Prop) => {
   const [data, count] = await prisma.$transaction([
     prisma.exam.findMany({
       where: query,
+      orderBy: {
+        id: "desc",
+      },
       include: {
         lesson: {
           select: {
+            name: true,
             class: { select: { name: true } },
             subject: { select: { name: true } },
             teacher: { select: { name: true, surname: true, username: true } },
@@ -138,8 +144,18 @@ const ExamListPage = async ({ searchParams }: Prop) => {
 
   const columns = [
     {
+      header: "Lesson",
+      accessor: "lessonId",
+      className: "text-left",
+    },
+    {
       header: "Subject",
       accessor: "subject",
+      className: "text-left",
+    },
+    {
+      header: "Title",
+      accessor: "title",
       className: "text-left",
     },
     {
@@ -183,7 +199,7 @@ const ExamListPage = async ({ searchParams }: Prop) => {
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
-              <FormModal table="exam" type="create" />
+              <FormContainer table="exam" type="create" />
             )}
           </div>
         </div>

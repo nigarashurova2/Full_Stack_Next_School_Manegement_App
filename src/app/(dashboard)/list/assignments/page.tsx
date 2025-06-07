@@ -1,4 +1,4 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -22,9 +22,10 @@ const renderRow = async (item: AssignmentList) => {
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.lesson.subject.name}</h3>
+          <h3 className="font-semibold">{item.title}</h3>
         </div>
       </td>
+      <td className="hidden md:table-cell">{item.lesson.subject.name}</td>
       <td className="hidden md:table-cell">{item.lesson.class.name}</td>
       <td className="hidden md:table-cell">{item.lesson.teacher.username}</td>
       <td className="hidden md:table-cell">
@@ -34,8 +35,8 @@ const renderRow = async (item: AssignmentList) => {
         <div className="flex items-center gap-2">
           {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
             <>
-              <FormModal table="assignment" type="update" data={item} />
-              <FormModal table="assignment" type="delete" id={item.id} />
+              <FormContainer table="assignment" type="update" data={item} />
+              <FormContainer table="assignment" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -106,6 +107,9 @@ const AssignmentListPage = async ({ searchParams }: Prop) => {
   const [data, count] = await prisma.$transaction([
     prisma.assignment.findMany({
       where: query,
+      orderBy: {
+        id: "desc",
+      },
       include: {
         lesson: {
           select: {
@@ -123,9 +127,14 @@ const AssignmentListPage = async ({ searchParams }: Prop) => {
 
   const columns = [
     {
+      header: "Title",
+      accessor: "title",
+      className: "text-left",
+    },
+    {
       header: "Subject",
       accessor: "subject",
-      className: "text-left",
+      className: "text-left hidden md:table-cell",
     },
     {
       header: "Class",
@@ -169,7 +178,7 @@ const AssignmentListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <FormModal table="assignment" type="create" />
+            <FormContainer table="assignment" type="create" />
           </div>
         </div>
       </div>

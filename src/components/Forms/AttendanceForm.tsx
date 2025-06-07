@@ -144,6 +144,7 @@ const AttendanceForm = ({
           defaultValue={data?.gender}
           error={errors.gender}
           options={genderOptions}
+          multiple={false}
         />
         <FileInputField
           label="Image"

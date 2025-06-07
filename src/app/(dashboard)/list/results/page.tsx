@@ -1,3 +1,4 @@
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -6,7 +7,6 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { currentUserId, getRole, USER_ROLES } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
 
 export type ResultList = {
   id: number;
@@ -44,15 +44,11 @@ const renderRow = async (item: ResultList) => {
       </td>
       <td>
         <div className="flex items-center gap-2">
-          <Link href={`/list/results/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-sky">
-              <Image src="/edit.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
           {(role === USER_ROLES.ADMIN || role === USER_ROLES.TEACHER) && (
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-purple">
-              <Image src="/delete.png" alt="" width={16} height={16} />
-            </button>
+            <>
+              <FormContainer table="result" type="update" data={item} />
+              <FormContainer table="result" type="delete" id={item.id} />
+            </>
           )}
         </div>
       </td>
@@ -79,12 +75,12 @@ const ResultListPage = async ({ searchParams }: Prop) => {
           case "search":
             query.OR = [
               { exam: { title: { contains: value, mode: "insensitive" } } },
+              {
+                assignment: { title: { contains: value, mode: "insensitive" } },
+              },
               { student: { name: { contains: value, mode: "insensitive" } } },
               {
                 student: { surname: { contains: value, mode: "insensitive" } },
-              },
-              {
-                score: parseInt(value),
               },
             ];
             break;
@@ -100,8 +96,6 @@ const ResultListPage = async ({ searchParams }: Prop) => {
 
   // ROLE CONDITION
   switch (role) {
-    case USER_ROLES.ADMIN:
-      break;
     case USER_ROLES.TEACHER:
       query.OR = [
         { exam: { lesson: { teacherId: userId } } },
@@ -119,6 +113,9 @@ const ResultListPage = async ({ searchParams }: Prop) => {
   const [dataRes, count] = await prisma.$transaction([
     prisma.result.findMany({
       where: query,
+      orderBy: {
+        id: "desc",
+      },
       include: {
         student: { select: { name: true, surname: true, username: true } },
         exam: {
@@ -223,9 +220,7 @@ const ResultListPage = async ({ searchParams }: Prop) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow">
-              <Image src="/plus.png" alt="" width={14} height={14} />
-            </button>
+            <FormContainer table="result" type="create" />
           </div>
         </div>
       </div>

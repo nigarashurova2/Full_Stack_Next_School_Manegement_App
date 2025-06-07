@@ -1,7 +1,14 @@
 "use client";
 
 import {
+  deleteAnnouncement,
+  deleteAssignment,
   deleteClass,
+  deleteEvent,
+  deleteExam,
+  deleteLesson,
+  deleteParent,
+  deleteResult,
   deleteStudent,
   deleteSubject,
   deleteTeacher,
@@ -58,6 +65,10 @@ const AnnouncementForm = dynamic(() => import("./Forms/AnnouncementForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
+const ResultForm = dynamic(() => import("./Forms/ResultForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+
 type FormsType = {
   [key: string]: (
     setOpen: Dispatch<SetStateAction<boolean>>,
@@ -71,15 +82,15 @@ const deleteActionMap: Record<Table, typeof deleteClass> = {
   subject: deleteSubject,
   teacher: deleteTeacher,
   student: deleteStudent,
-  parent: deleteSubject,
+  parent: deleteParent,
   class: deleteClass,
-  lesson: deleteSubject,
-  exam: deleteSubject,
-  assignment: deleteSubject,
+  lesson: deleteLesson,
+  exam: deleteExam,
+  assignment: deleteAssignment,
   attendance: deleteSubject,
-  event: deleteSubject,
-  announcement: deleteSubject,
-  result: deleteSubject,
+  event: deleteEvent,
+  announcement: deleteAnnouncement,
+  result: deleteResult,
 };
 
 const forms: FormsType = {
@@ -99,7 +110,14 @@ const forms: FormsType = {
       relatedData={relatedData}
     />
   ),
-  // parent: (setOpen, type, data) => <ParentForm setOpen={setOpen} type={type} data={data} />,
+  parent: (setOpen, type, data, relatedData) => (
+    <ParentForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
   class: (setOpen, type, data, relatedData) => (
     <ClassForm
       setOpen={setOpen}
@@ -116,12 +134,55 @@ const forms: FormsType = {
       relatedData={relatedData}
     />
   ),
-  // lesson: (setOpen, type, data) => <LessonForm setOpen={setOpen} type={type} data={data} />,
-  // exam: (setOpen, type, data) => <ExamForm setOpen={setOpen} type={type} data={data} />,
-  // assignment: (setOpen, type, data) => <AssignmentForm setOpen={setOpen} type={type} data={data} />,
+  lesson: (setOpen, type, data, relatedData) => (
+    <LessonForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  exam: (setOpen, type, data, relatedData) => (
+    <ExamForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  event: (setOpen, type, data, relatedData) => (
+    <EventForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  result: (setOpen, type, data, relatedData) => (
+    <ResultForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  announcement: (setOpen, type, data, relatedData) => (
+    <AnnouncementForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  assignment: (setOpen, type, data, relatedData) => (
+    <AssignmentForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
   // attendance: (setOpen, type, data) => <AttendanceForm setOpen={setOpen} type={type} data={data} />,
-  // event: (setOpen, type, data) => <EventForm setOpen={setOpen} type={type} data={data} />,
-  // announcement: (setOpen, type, data) => <AnnouncementForm setOpen={setOpen} type={type} data={data} />,
 };
 
 const FormModal = ({

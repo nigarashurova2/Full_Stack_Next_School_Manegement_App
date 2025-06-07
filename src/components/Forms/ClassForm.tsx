@@ -62,18 +62,15 @@ const ClassForm = ({
   }, [router, state]);
 
   const onSubmit = handleSubmit((data: ClassSchema) => {
-    console.log(data);
     formAction(data);
   });
 
-    const { teachers, grades } = relatedData;
+  const { teachers, grades } = relatedData;
 
-  const gradeOptions = grades.map(
-    (grade: { id: number; level: number }) => ({
-      val: grade.id,
-      label: grade.level,
-    })
-  );
+  const gradeOptions = grades.map((grade: { id: number; level: number }) => ({
+    val: grade.id,
+    label: grade.level,
+  }));
 
   const supervisorOptions = teachers.map(
     (item: { id: number; name: string; surname: string }) => ({
