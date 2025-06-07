@@ -6,18 +6,30 @@ import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Bounce, toast } from "react-toastify";
 
 const LoginPage = () => {
-    const {  user } = useUser()
+  const { user } = useUser();
 
-    const router = useRouter()
+  const router = useRouter();
 
-    useEffect(()=> {
-      const role = user?.publicMetadata.role
-      if(role){
-        router.push(`/${role}`)
-      }
-    }, [router, user])
+  useEffect(() => {
+    const role = user?.publicMetadata.role;
+    if (role) {
+      router.push(`/${role}`);
+      toast.success(`Login successful!`, {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+    }
+  }, [router, user]);
 
   return (
     <div className="h-screen flex items-center justify-center bg-lamaSkyLight">
@@ -28,7 +40,7 @@ const LoginPage = () => {
         >
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Image src="/logo.png" alt="" width={24} height={24} />
-            SchooLama
+            School Management App
           </h1>
           <h2 className="text-gray-400">Sign in to your account</h2>
           <Clerk.GlobalError className="text-sm text-red-400" />
