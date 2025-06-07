@@ -1,19 +1,16 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import InputField from "../InputField";
-import SelectField from "../SelectField";
-import FileInputField from "../FileInputField";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import {
-  genderOptions,
-  teacherSchema,
-  TeacherSchema,
-} from "@/lib/formValidationSchemas";
-import { createTeacher, updateTeacher } from "@/lib/actions";
+import Image from "next/image";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { teacherSchema, TeacherSchema } from "@/lib/formValidationSchemas";
 import { useFormState } from "react-dom";
+import { createTeacher, updateTeacher } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { Bounce, toast } from "react-toastify";
+import { CldUploadWidget } from "next-cloudinary";
 
 const TeacherForm = ({
   type,
@@ -21,9 +18,9 @@ const TeacherForm = ({
   setOpen,
   relatedData,
 }: {
-  setOpen: Dispatch<SetStateAction<boolean>>;
   type: "create" | "update";
   data?: any;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   relatedData?: any;
 }) => {
   const {
@@ -34,8 +31,8 @@ const TeacherForm = ({
     resolver: zodResolver(teacherSchema),
   });
 
-  const router = useRouter();
-  const {subjects} = relatedData;
+  const [img, setImg] = useState<any>();
+
   const [state, formAction] = useFormState(
     type === "create" ? createTeacher : updateTeacher,
     {
@@ -45,10 +42,17 @@ const TeacherForm = ({
     }
   );
 
+  const onSubmit = handleSubmit((data) => {
+    console.log(data);
+    formAction({ ...data });
+  });
+
+  const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       toast.success(
-        `Teacher has been ${type === "create" ? "created" : "updated"}`,
+        `Teacher has been ${type === "create" ? "created" : "updated"}!`,
         {
           position: "top-right",
           autoClose: 5000,
@@ -64,134 +68,157 @@ const TeacherForm = ({
       setOpen(false);
       router.refresh();
     }
-  }, [router, state]);
+  }, [state, router, type, setOpen]);
 
-  const onSubmit = handleSubmit((data: TeacherSchema) => {
-    console.log(data, "DATA");
-    formAction(data);
-  });
- 
-   const subjectOptions = subjects.map(
-    (item: { id: number; name: string; }) => ({
-      label: item.name,
-      val: item.id,
-    })
-  );
-
+  const { subjects } = relatedData;
 
   return (
-    <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1>{type === "create" ? "Create a new teacher" : "Update a teacher"}</h1>
+    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+      <h1 className="text-xl font-semibold">
+        {type === "create" ? "Create a new teacher" : "Update the teacher"}
+      </h1>
       <span className="text-xs text-gray-400 font-medium">
         Authentication Information
       </span>
-      <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="flex justify-between flex-wrap gap-4">
         <InputField
           label="Username"
-          type="text"
-          register={register}
           name="username"
           defaultValue={data?.username}
-          error={errors.username}
+          register={register}
+          error={errors?.username}
         />
         <InputField
           label="Email"
-          type="email"
-          register={register}
           name="email"
           defaultValue={data?.email}
-          error={errors.email}
+          register={register}
+          error={errors?.email}
         />
         <InputField
           label="Password"
-          type="password"
-          register={register}
           name="password"
+          type="password"
           defaultValue={data?.password}
-          error={errors.password}
+          register={register}
+          error={errors?.password}
         />
       </div>
-
       <span className="text-xs text-gray-400 font-medium">
         Personal Information
       </span>
-      <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="flex justify-between flex-wrap gap-4">
         <InputField
-          label="Name"
-          type="text"
-          register={register}
+          label="First Name"
           name="name"
           defaultValue={data?.name}
+          register={register}
           error={errors.name}
         />
         <InputField
-          label="Surname"
-          type="text"
-          register={register}
+          label="Last Name"
           name="surname"
           defaultValue={data?.surname}
+          register={register}
           error={errors.surname}
         />
         <InputField
           label="Phone"
-          type="text"
-          register={register}
           name="phone"
           defaultValue={data?.phone}
+          register={register}
           error={errors.phone}
         />
         <InputField
           label="Address"
-          type="text"
-          register={register}
           name="address"
           defaultValue={data?.address}
+          register={register}
           error={errors.address}
         />
         <InputField
           label="Blood Type"
-          type="text"
-          register={register}
           name="bloodType"
           defaultValue={data?.bloodType}
+          register={register}
           error={errors.bloodType}
         />
         <InputField
           label="Birthday"
-          type="date"
-          register={register}
           name="birthday"
           defaultValue={data?.birthday.toISOString().split("T")[0]}
+          register={register}
           error={errors.birthday}
+          type="date"
         />
-        <SelectField
-          label="Gender"
-          register={register}
-          name="sex"
-          defaultValue={data?.sex}
-          error={errors.sex}
-          options={genderOptions}
-          multiple={false}
-        />
-        <SelectField
-          label="Subjects"
-          register={register}
-          name="subjects"
-          defaultValue={data?.subjects}
-          error={errors?.subjects}
-          options={subjectOptions}
-          multiple={true}
-        />
-        {/* <FileInputField
-          label="Image"
-          register={register}
-          name="img"
-          defaultValue={""}
-          error={errors.img}
-        /> */}
+        {data && (
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors?.id}
+            hidden
+          />
+        )}
+        <div className="flex flex-col gap-2 w-full md:w-1/4">
+          <label className="text-xs text-gray-500">Sex</label>
+          <select
+            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            {...register("sex")}
+            defaultValue={data?.sex}
+          >
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+          </select>
+          {errors.sex?.message && (
+            <p className="text-xs text-red-400">
+              {errors.sex.message.toString()}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 w-full md:w-1/4">
+          <label className="text-xs text-gray-500">Subjects</label>
+          <select
+            multiple
+            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            {...register("subjects")}
+            defaultValue={data?.subjects}
+          >
+            {subjects.map((subject: { id: number; name: string }) => (
+              <option value={subject.id} key={subject.id}>
+                {subject.name}
+              </option>
+            ))}
+          </select>
+          {errors.subjects?.message && (
+            <p className="text-xs text-red-400">
+              {errors.subjects.message.toString()}
+            </p>
+          )}
+        </div>
+        {/* <CldUploadWidget
+          uploadPreset="school"
+          onSuccess={(result, { widget }) => {
+            setImg(result.info);
+            widget.close();
+          }}
+        >
+          {({ open }) => {
+            return (
+              <div
+                className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
+                onClick={() => open()}
+              >
+                <Image src="/upload.png" alt="" width={28} height={28} />
+                <span>Upload a photo</span>
+              </div>
+            );
+          }}
+        </CldUploadWidget> */}
       </div>
       {state.error && <span className="text-red-500">{state.message}</span>}
-      <button className="bg-blue-400 text-white p-2 rounded-md " type="submit">
+      <button className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

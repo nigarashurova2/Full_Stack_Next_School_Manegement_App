@@ -140,21 +140,30 @@ export const createTeacher = async (
   data: TeacherSchema
 ) => {
   try {
+    const client = await clerkClient();
+    const user = await client.users.createUser({
+      username: data.username,
+      password: data.password,
+      firstName: data.name,
+      lastName: data.surname,
+      publicMetadata: { role: "teacher" },
+    });
+
     await prisma.teacher.create({
       data: {
-        id: data.id,
+        id: user.id,
         username: data.username,
         name: data.name,
         surname: data.surname,
         email: data.email || null,
         phone: data.phone || null,
-        // img: data.img || null,
         address: data.address,
+        // img: data.img || null,
         bloodType: data.bloodType,
-        birthday: data.birthday,
         sex: data.sex,
+        birthday: data.birthday,
         subjects: {
-          connect: data.subjects.map((subjectId: string) => ({
+          connect: data.subjects?.map((subjectId: string) => ({
             id: parseInt(subjectId),
           })),
         },
@@ -162,9 +171,10 @@ export const createTeacher = async (
     });
 
     // revalidatePath("/list/teachers");
-    return { success: true, error: false, message: "SUCCESS" };
-  } catch (error) {
-    return { success: false, error: true, message: "Something wentt wrong! " };
+    return { success: true, error: false, message: "" };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true, message: "" };
   }
 };
 
@@ -172,16 +182,53 @@ export const updateTeacher = async (
   currentState: CurrentState,
   data: TeacherSchema
 ) => {
+  if (!data.id) {
+    return { success: false, error: true, message: "" };
+  }
   try {
-    // await prisma.teacher.update({
-    //   where: { id: data.id },
-    //   data: data,
-    // });
+    const client = await clerkClient();
+    const user = await client.users.updateUser(data.id, {
+      username: data.username,
+      ...(data.password !== "" && { password: data.password }),
+      firstName: data.name,
+      lastName: data.surname,
+    });
 
+    await prisma.teacher.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        ...(data.password !== "" && { password: data.password }),
+        username: data.username,
+        name: data.name,
+        surname: data.surname,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address,
+        // img: data.img || null,
+        bloodType: data.bloodType,
+        sex: data.sex,
+        birthday: data.birthday,
+        subjects: {
+          set: data.subjects?.map((subjectId: string) => ({
+            id: parseInt(subjectId),
+          })),
+        },
+      },
+    });
     // revalidatePath("/list/teachers");
-    return { success: true, error: false, message: "SUCCESS" };
-  } catch (error) {
-    return { success: false, error: true, message: "Something went wrong! " };
+    return { success: true, error: false, message: "" };
+  } catch (err) {
+    if (isClerkAPIResponseError(err)) {
+      const clerkMessage = err.errors?.[0]?.message || "Clerk error occurred.";
+      return {
+        success: false,
+        error: true,
+        message: clerkMessage,
+      };
+    }
+    return { success: false, error: true, message: "" };
   }
 };
 
@@ -208,6 +255,7 @@ export const createStudent = async (
   currentState: CurrentState,
   data: StudentSchema
 ) => {
+  console.log(data);
   try {
     const classItem = await prisma.class.findUnique({
       where: { id: data.classId },
@@ -215,9 +263,8 @@ export const createStudent = async (
     });
 
     if (classItem && classItem.capacity === classItem._count.students) {
-      return { success: false, error: true, message: "" };
+      return { success: false, error: true, message: "Class count error" };
     }
-
     const client = await clerkClient();
     const user = await client.users.createUser({
       username: data.username,
@@ -236,7 +283,7 @@ export const createStudent = async (
         email: data.email || null,
         phone: data.phone || null,
         address: data.address,
-        img: data.img || null,
+        // img: data.img || null,
         bloodType: data.bloodType,
         sex: data.sex,
         birthday: data.birthday,
@@ -247,9 +294,18 @@ export const createStudent = async (
     });
 
     // revalidatePath("/list/students");
-    return { success: true, error: false, message: "" };
+    return { success: true, error: false, message: "Success" };
   } catch (err) {
-    return { success: false, error: true, message: "" };
+    if (isClerkAPIResponseError(err)) {
+      const clerkMessage = err.errors?.[0]?.message || "Clerk error occurred.";
+      return {
+        success: false,
+        error: true,
+        message: clerkMessage,
+      };
+    }
+    console.log(err);
+    return { success: false, error: true, message: "Error" };
   }
 };
 
@@ -258,7 +314,7 @@ export const updateStudent = async (
   data: StudentSchema
 ) => {
   if (!data.id) {
-    return { success: false, error: true, message: "" };
+    return { success: false, error: true, message: "Id not found" };
   }
   try {
     const client = await clerkClient();
@@ -281,7 +337,7 @@ export const updateStudent = async (
         email: data.email || null,
         phone: data.phone || null,
         address: data.address,
-        img: data.img || null,
+        // img: data.img || null,
         bloodType: data.bloodType,
         sex: data.sex,
         birthday: data.birthday,
@@ -291,9 +347,18 @@ export const updateStudent = async (
       },
     });
     // revalidatePath("/list/students");
-    return { success: true, error: false, message: "" };
+    return { success: true, error: false, message: "Success" };
   } catch (err) {
-    return { success: false, error: true, message: "" };
+    console.log(err);
+    if (isClerkAPIResponseError(err)) {
+      const clerkMessage = err.errors?.[0]?.message || "Clerk error occurred.";
+      return {
+        success: false,
+        error: true,
+        message: clerkMessage,
+      };
+    }
+    return { success: false, error: true, message: "Error" };
   }
 };
 

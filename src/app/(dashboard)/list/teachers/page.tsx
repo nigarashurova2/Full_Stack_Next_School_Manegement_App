@@ -96,6 +96,7 @@ const TeacherListPage = async ({ searchParams }: Props) => {
   const [data, count] = await prisma.$transaction([
     prisma.teacher.findMany({
       where: query,
+      orderBy: { createdAt: "desc" },
       include: {
         subjects: true,
         classes: true,

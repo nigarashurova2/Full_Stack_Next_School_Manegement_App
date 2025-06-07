@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const genderOptions = [
+  { label: "Male", val: "MALE" },
+  { label: "Female", val: "FEMALE" },
+];
+
 export const subjectSchema = z.object({
   id: z.coerce.number().optional(),
   name: z.string().min(3, { message: "Subject Name is required" }),
@@ -19,7 +24,7 @@ export const classSchema = z.object({
 export type ClassSchema = z.infer<typeof classSchema>;
 
 export const teacherSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   username: z
     .string()
     .min(3, { message: "Username must be at least 3 characters long!" })
@@ -42,13 +47,8 @@ export const teacherSchema = z.object({
   bloodType: z.string().min(1, { message: "Blood Type is required!" }),
   birthday: z.coerce.date({ message: "Birthday is required!" }),
   sex: z.enum(["MALE", "FEMALE"], { message: "Sex is required!" }),
-  subjects: z.array(z.string()), // subject ids
+  subjects: z.array(z.string()).optional(), // subject ids
 });
-
-export const genderOptions = [
-  { label: "Male", val: "MALE" },
-  { label: "Female", val: "FEMALE" },
-];
 
 export type TeacherSchema = z.infer<typeof teacherSchema>;
 
